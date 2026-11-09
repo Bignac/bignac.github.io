@@ -6,6 +6,12 @@ on:
 
 concurrency:
   group: ${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
@@ -19,3 +25,5 @@ jobs:
       - run: npm run build
       - uses: actions/configure-pages@v4
       - uses: actions/deploy-pages@v4
+        with:
+          idempotency: true
