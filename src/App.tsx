@@ -18,6 +18,7 @@ import type {
   ToolKey,
   VideoMeta,
 } from './types'
+import { Landing } from './components/Landing'
 import { TopBar } from './components/TopBar'
 import { Rail } from './components/Rail'
 import { LibraryPanel } from './components/LibraryPanel'
@@ -106,6 +107,7 @@ async function createAsset(file: File): Promise<MediaAsset> {
 }
 
 function App() {
+  const [view, setView] = useState<'home' | 'projects'>('home')
   const [projectName, setProjectName] = useState('Untitled green screen')
   const [assets, setAssets] = useState<MediaAsset[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -486,6 +488,10 @@ function App() {
     setBackground(next)
   }
 
+  if (view === 'home') {
+    return <Landing onOpenProjects={() => setView('projects')} />
+  }
+
   return (
     <div
       className={`app ${dragging ? 'is-dragging' : ''}`}
@@ -516,6 +522,7 @@ function App() {
         projectName={projectName}
         onProjectName={setProjectName}
         activeAsset={activeAsset}
+        onHome={() => setView('home')}
         onExport={() => setExportOpen(true)}
         onToggleLibrary={() => setLibraryOpen((current) => !current)}
         onToggleInspector={() => setInspectorOpen((current) => !current)}

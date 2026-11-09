@@ -1,5 +1,6 @@
 import {
   Download,
+  House,
   LayoutPanelLeft,
   Settings2,
   ShieldCheck,
@@ -10,6 +11,7 @@ export function TopBar({
   projectName,
   onProjectName,
   activeAsset,
+  onHome,
   onExport,
   onToggleLibrary,
   onToggleInspector,
@@ -19,6 +21,7 @@ export function TopBar({
   projectName: string
   onProjectName: (name: string) => void
   activeAsset: MediaAsset | null
+  onHome: () => void
   onExport: () => void
   onToggleLibrary: () => void
   onToggleInspector: () => void
@@ -28,6 +31,15 @@ export function TopBar({
   return (
     <header className="topbar">
       <div className="topbar-left">
+        <button
+          type="button"
+          className="icon-button"
+          onClick={onHome}
+          aria-label="Back to home"
+          title="Back to home"
+        >
+          <House size={17} />
+        </button>
         <button
           type="button"
           className={`icon-button panel-toggle ${libraryOpen ? 'is-active' : ''}`}
