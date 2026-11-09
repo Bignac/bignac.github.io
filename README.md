@@ -17,7 +17,7 @@ npm install
 npm run dev -- --host 127.0.0.1
 ```
 
-Open http://127.0.0.1:5173 in Chrome (GPU acceleration recommended).
+Open  in Chrome (GPU acceleration recommended).
 
 ## Build
 
