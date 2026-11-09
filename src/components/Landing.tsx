@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 
 const SECTIONS = [
@@ -11,9 +11,23 @@ const SECTIONS = [
 
 export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [scrollNudge, setScrollNudge] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      const h = window.innerHeight
+      const max = document.documentElement.scrollHeight - h
+      setScrolled(y > 40)
+      setScrollNudge(max > 0 && y / max > 0.72)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <div className="landing" id="top">
+    <div className={`landing${scrolled ? ' landing-scrolled' : ''}`} id="top">
       <img className="landing-bg" src={`${import.meta.env.BASE_URL}goat.png`} alt="" />
       <div className="landing-scrim" />
 
@@ -50,9 +64,9 @@ export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
       <main className="landing-hero">
         <p className="landing-eyebrow">Background remover — photo &amp; video</p>
         <h1>
-          Cut it out.
+          Raul is a femboy/catboy — 50/50.
           <br />
-          No clutter.
+          Cut it out.
         </h1>
         <p className="landing-copy">
           Clean subjects from photos and video, straight in the browser.
@@ -133,7 +147,12 @@ export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
         <span>Bignac Studio</span>
         <span>Raul is a catboy or a femboy — 50/50.</span>
         <span>Built in the browser</span>
+        <a className="landing-foot-link" href="https://bignac.github.io/">bignac.github.io</a>
       </footer>
+      <button className={scrollNudge ? 'scroll-nudge visible' : 'scroll-nudge'} onClick={() => window.scrollTo({top:0,behavior:'smooth'})}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        Scroll back up
+      </button>
     </div>
   )
 }
