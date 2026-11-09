@@ -17,7 +17,7 @@ import {
   fitRect,
   getPreviewSize,
 } from '../lib/utils'
-import { drawRefinedPerson } from '../lib/matting'
+import { drawPerson } from '../lib/matting'
 import { canRecordCanvas } from '../lib/video'
 
 interface Settings {
@@ -75,7 +75,7 @@ function drawComposite(
   video: HTMLVideoElement,
   settings: Settings,
   mask: MaskTexture | null,
-  personCanvas: HTMLCanvasElement,
+  _personCanvas: HTMLCanvasElement,
 ) {
   context.clearRect(0, 0, width, height)
   if (settings.background.mode === 'color') {
@@ -92,52 +92,7 @@ function drawComposite(
   )
 
   if (settings.removeBg && mask) {
-    if (personCanvas.width !== width || personCanvas.height !== height) {
-      personCanvas.width = width
-      personCanvas.height = height
-    }
-    const personContext = personCanvas.getContext('2d')
-    if (personContext) {
-      personContext.clearRect(0, 0, width, height)
-      personContext.globalCompositeOperation = 'source-over'
-      personContext.drawImage(
-        video,
-        rect.sourceX,
-        rect.sourceY,
-        rect.sourceWidth,
-        rect.sourceHeight,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-      )
-      personContext.globalCompositeOperation = 'destination-in'
-      personContext.imageSmoothingEnabled = true
-      personContext.imageSmoothingQuality = 'high'
-      personContext.drawImage(
-        mask.canvas,
-        0,
-        0,
-        mask.width,
-        mask.height,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-      )
-      personContext.globalCompositeOperation = 'source-over'
-      // Rebuild edge colours so the old background does not bleed through
-      // hair and shoulders (alpha unmixing + green-spill suppression).
-      drawRefinedPerson(
-        personContext,
-        video,
-        mask,
-        settings.fit,
-        rect,
-      )
-      context.drawImage(personCanvas, 0, 0)
-      return
-    }
+    if (drawPerson(context, video, mask, settings.fit, rect)) return
   }
 
   context.drawImage(

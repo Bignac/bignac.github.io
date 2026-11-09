@@ -19,7 +19,7 @@ const path = require('node:path')
 
 const PORT = 5173
 const URL = `http://127.0.0.1:${PORT}`
-const PUBLIC_URL = 'https://jeffrey-stein.github.io/bgr/'
+const PUBLIC_URL = 'https://bignac.github.io/'
 const PROJECT = path.join(__dirname, '..')
 const LOG = path.join(PROJECT, 'logs', 'health-check.log')
 

@@ -16,7 +16,7 @@ import { fitRect } from './utils'
 interface Scratch {
   frame: HTMLCanvasElement
   foreground: HTMLCanvasElement
-  overlay: HTMLCanvasElement
+  alpha: HTMLCanvasElement
 }
 
 let scratch: Scratch | null = null
@@ -26,10 +26,10 @@ function getScratch(width: number, height: number): Scratch {
     scratch = {
       frame: document.createElement('canvas'),
       foreground: document.createElement('canvas'),
-      overlay: document.createElement('canvas'),
+      alpha: document.createElement('canvas'),
     }
   }
-  for (const canvas of [scratch.frame, scratch.foreground]) {
+  for (const canvas of [scratch.frame, scratch.foreground, scratch.alpha]) {
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width
       canvas.height = height
@@ -43,34 +43,33 @@ function context2d(canvas: HTMLCanvasElement) {
 }
 
 /**
- * Redraws the subject over `personContext` with decontaminated edge colours.
- * Returns false when no reliable background estimate is possible.
+ * Draws the cut-out subject with an edge-aware matte.
+ *
+ * The segmentation model only sees 256x256, so a naive upscale leaves a
+ * stair-stepped silhouette. We upscale the alpha with a joint-bilateral
+ * (guided) filter that uses the full-resolution frame colours as the guide:
+ * alpha stops at strong colour edges, and colour spill is unmixed at the
+ * same time. This is the standard guided-matte approach used by remove.bg
+ * and Canva-class tools.
  */
-export function drawRefinedPerson(
-  personContext: CanvasRenderingContext2D,
+export function drawPerson(
+  context: CanvasRenderingContext2D,
   video: HTMLVideoElement,
   mask: MaskTexture,
   fit: FitMode,
   rect: { x: number; y: number; width: number; height: number },
 ): boolean {
-  const alpha = mask.alpha
-  if (!alpha || !mask.width || !mask.height) return false
+  const alphaSource = mask.alpha
+  if (!alphaSource || !mask.width) return false
 
-  const w = mask.width
-  const h = mask.height
+  const w = Math.max(64, Math.min(1280, Math.round(rect.width)))
+  const h = Math.max(64, Math.round((w * rect.height) / rect.width))
   const resources = getScratch(w, h)
   const frameContext = context2d(resources.frame)
   const fgContext = context2d(resources.foreground)
-  const overlayContext = context2d(resources.overlay)
-  if (!frameContext || !fgContext || !overlayContext) return false
+  if (!frameContext || !fgContext) return false
 
-  const frameRect = fitRect(
-    w,
-    h,
-    video.videoWidth,
-    video.videoHeight,
-    fit,
-  )
+  const frameRect = fitRect(w, h, video.videoWidth, video.videoHeight, fit)
   frameContext.clearRect(0, 0, w, h)
   frameContext.drawImage(
     video,
@@ -84,44 +83,103 @@ export function drawRefinedPerson(
     frameRect.height,
   )
 
-  const source = frameContext.getImageData(0, 0, w, h)
-  const pixels = source.data
+  const frameImage = frameContext.getImageData(0, 0, w, h)
+  const pixels = frameImage.data
 
-  // Estimate the old background colour from confidently transparent pixels.
-  let r = 0
-  let g = 0
-  let b = 0
+  // Sample the 256px matte at the full frame resolution.
+  const alphaCanvas = resources.alpha
+  const alphaContext = context2d(alphaCanvas)
+  if (!alphaContext) return false
+  alphaContext.clearRect(0, 0, w, h)
+  alphaContext.imageSmoothingEnabled = true
+  alphaContext.imageSmoothingQuality = 'high'
+  alphaContext.drawImage(mask.canvas, 0, 0, w, h)
+  const alphaImage = alphaContext.getImageData(0, 0, w, h)
+  const alpha = alphaImage.data
+
+  // Background colour estimate for unmixing.
+  let br = 0
+  let bg = 0
+  let bb = 0
   let samples = 0
-  for (let i = 0; i < alpha.length; i += 1) {
-    if (alpha[i] < 0.06) {
+  for (let i = 0; i < w * h; i += 1) {
+    if (alpha[i * 4 + 3] < 16) {
       const offset = i * 4
-      r += pixels[offset]
-      g += pixels[offset + 1]
-      b += pixels[offset + 2]
+      br += pixels[offset]
+      bg += pixels[offset + 1]
+      bb += pixels[offset + 2]
       samples += 1
     }
   }
-  if (samples < alpha.length * 0.015) return false
-  const bgR = r / samples
-  const bgG = g / samples
-  const bgB = b / samples
+  const haveBackground = samples > w * h * 0.01
+  if (haveBackground) {
+    br /= samples
+    bg /= samples
+    bb /= samples
+  }
 
-  const out = fgContext.createImageData(w, h)
-  const fg = out.data
-  for (let i = 0; i < alpha.length; i += 1) {
+  const out = new Float32Array(w * h)
+  const luma = new Float32Array(w * h)
+  for (let i = 0; i < w * h; i += 1) {
     const offset = i * 4
-    let a = alpha[i]
-    if (a < 0.02) a = 0
+    luma[i] =
+      pixels[offset] * 0.299 + pixels[offset + 1] * 0.587 + pixels[offset + 2] * 0.114
+  }
+
+  const sigma = 24
+  const spatial = [-2, -1, 0, 1, 2]
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const index = y * w + x
+      const a = alpha[index * 4 + 3] / 255
+      if (a < 0.02) {
+        out[index] = 0
+        continue
+      }
+      if (a > 0.98) {
+        out[index] = 1
+        continue
+      }
+
+      // Joint bilateral: neighbouring alphas whose colour is similar to this
+      // pixel dominate. Background-coloured neighbours get weighted out.
+      let weighted = 0
+      let total = 0
+      const centreLuma = luma[index]
+      for (const dy of spatial) {
+        const ny = y + dy
+        if (ny < 0 || ny >= h) continue
+        for (const dx of spatial) {
+          const nx = x + dx
+          if (nx < 0 || nx >= w) continue
+          const n = ny * w + nx
+          const delta = luma[n] - centreLuma
+          const colourWeight = Math.exp(-(delta * delta) / (2 * sigma * sigma))
+          const dist = dx * dx + dy * dy
+          const spaceWeight = Math.exp(-dist / 8)
+          const weight = colourWeight * spaceWeight
+          weighted += (alpha[n * 4 + 3] / 255) * weight
+          total += weight
+        }
+      }
+      out[index] = total > 0 ? weighted / total : a
+    }
+  }
+
+  const fgImage = fgContext.createImageData(w, h)
+  const fg = fgImage.data
+  for (let i = 0; i < w * h; i += 1) {
+    const offset = i * 4
+    const a = Math.min(1, Math.max(0, out[i]))
     let pr = pixels[offset]
     let pg = pixels[offset + 1]
     let pb = pixels[offset + 2]
 
-    if (a > 0.02 && a < 0.98) {
+    if (haveBackground && a > 0.02 && a < 0.98) {
       const inverse = 1 - a
-      pr = (pr - inverse * bgR) / a
-      pg = (pg - inverse * bgG) / a
-      pb = (pb - inverse * bgB) / a
-      // Residual green-screen spill: pull green back toward the neutral axis.
+      pr = (pr - inverse * br) / a
+      pg = (pg - inverse * bg) / a
+      pb = (pb - inverse * bb) / a
       const neutral = (pr + pb) * 0.5
       if (pg > neutral) pg = neutral + (pg - neutral) * 0.25
     }
@@ -131,35 +189,10 @@ export function drawRefinedPerson(
     fg[offset + 2] = Math.max(0, Math.min(255, pb))
     fg[offset + 3] = Math.round(a * 255)
   }
-  fgContext.putImageData(out, 0, 0)
-
-  // Draw the clean edge over the already-composited subject.
-  if (resources.overlay.width !== Math.ceil(rect.width) ||
-      resources.overlay.height !== Math.ceil(rect.height)) {
-    resources.overlay.width = Math.max(1, Math.ceil(rect.width))
-    resources.overlay.height = Math.max(1, Math.ceil(rect.height))
-  }
-  overlayContext.clearRect(0, 0, resources.overlay.width, resources.overlay.height)
-  overlayContext.imageSmoothingEnabled = true
-  overlayContext.imageSmoothingQuality = 'high'
-  overlayContext.drawImage(
-    resources.foreground,
-    0,
-    0,
-    resources.overlay.width,
-    resources.overlay.height,
-  )
-  overlayContext.globalCompositeOperation = 'destination-in'
-  overlayContext.drawImage(
-    mask.edgeCanvas,
-    0,
-    0,
-    resources.overlay.width,
-    resources.overlay.height,
-  )
-  overlayContext.globalCompositeOperation = 'source-over'
-
-  personContext.drawImage(resources.overlay, rect.x, rect.y)
+  fgContext.putImageData(fgImage, 0, 0)
+  context.imageSmoothingEnabled = true
+  context.imageSmoothingQuality = 'high'
+  context.drawImage(resources.foreground, rect.x, rect.y, rect.width, rect.height)
   return true
 }
 

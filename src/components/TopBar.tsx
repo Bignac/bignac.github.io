@@ -39,11 +39,10 @@ export function TopBar({
         </button>
         <div className="brand">
           <div className="logo-mark" aria-hidden="true">
-            <span>B</span>
-            <i />
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" />
           </div>
           <div className="brand-type">
-            <span className="brand-name">bignac</span>
+            <span className="brand-name">BIGNAC</span>
             <span className="brand-sub">STUDIO</span>
           </div>
         </div>
