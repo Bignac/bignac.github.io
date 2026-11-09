@@ -481,3 +481,32 @@ h1, h2, h3, strong { font-weight: 600; }
 .landing-contact a{display:inline-flex;align-items:center;gap:6px;color:#fff}
 .landing-foot{margin-top:auto;display:flex;justify-content:space-between;padding:20px 26px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.45)}
 @media (max-width:640px){.landing-nav-links{display:none}.landing-menu-toggle{display:inline-flex}.landing-hero{padding-top:22vh}}
+
+.landing-nav{position:fixed;top:0;left:0;right:0;background:linear-gradient(180deg,rgba(8,8,8,.85),transparent);justify-content:space-between}
+.landing-left{display:flex;align-items:center;gap:12px}
+.landing-drawer-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:5px;background:rgba(255,255,255,.06);border:0;color:#fff;cursor:pointer}
+.landing-drawer-toggle:hover{background:rgba(255,255,255,.14)}
+.landing-brand{display:flex;align-items:center;gap:9px;color:#fff;text-decoration:none}
+.landing-brand img{filter:invert(1)}
+.landing-signup{position:fixed;top:16px;right:20px;z-index:5;display:inline-flex;align-items:center;height:34px;padding:0 16px;border-radius:5px;background:#fff;color:#0c0c0c;font-size:12px;font-weight:600;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.landing-signup:hover{background:#e9e9e9}
+.landing-signup-inline{margin-top:14px}
+.landing-drawer{position:fixed;top:58px;left:20px;z-index:5;display:flex;flex-direction:column;min-width:200px;padding:6px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(18,18,18,.96);box-shadow:0 22px 50px rgba(0,0,0,.55)}
+.landing-drawer a{display:block;padding:10px 12px;border-radius:5px;color:rgba(255,255,255,.85);font-size:13px;text-decoration:none}
+.landing-drawer a:hover{background:rgba(255,255,255,.08);color:#fff}
+.landing{scroll-behavior:smooth}
+.landing-block{padding:10vh 26px;max-width:900px;border-top:1px solid rgba(255,255,255,.1)}
+.landing-block h2{margin:0 0 22px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:600}
+.landing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.landing-card{padding:20px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(12,12,12,.72)}
+.landing-card h3{margin:0 0 8px;font-size:15px;font-weight:600}
+.landing-card p{margin:0 0 16px;font-size:12.5px;line-height:1.6;color:rgba(255,255,255,.6)}
+.landing-card button{border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:5px;height:30px;padding:0 12px;font-size:12px;cursor:pointer}
+.landing-card button:hover{background:rgba(255,255,255,.1)}
+.landing-features{margin:0;padding:0;list-style:none;display:grid;gap:10px;font-size:14px;color:rgba(255,255,255,.85)}
+.landing-features li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.landing-block details{border-bottom:1px solid rgba(255,255,255,.1);padding:12px 0}
+.landing-block summary{cursor:pointer;font-size:14px;color:rgba(255,255,255,.9)}
+.landing-block p{font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.65)}
+.landing-nav-links{display:none!important}
+.landing-hero{padding-top:26vh}
