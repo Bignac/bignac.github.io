@@ -153,10 +153,12 @@ function blur(values: Float32Array, width: number, height: number) {
   for (let y = 0; y < height; y += 1) {
     const row = y * width
     for (let x = 0; x < width; x += 1) {
+      const a = values[row + Math.max(0, x - 2)]
       const l = values[row + Math.max(0, x - 1)]
       const c = values[row + x]
       const r = values[row + Math.min(width - 1, x + 1)]
-      tmp[row + x] = (l + c + c + r) * 0.25
+      const rr = values[row + Math.min(width - 1, x + 2)]
+      tmp[row + x] = (a + l + c + c + r + rr) / 6
     }
   }
   const out = new Float32Array(values.length)
@@ -169,6 +171,76 @@ function blur(values: Float32Array, width: number, height: number) {
     }
   }
   return out
+}
+
+
+/** Removes isolated specks and fills holes so the matte is one clean shape. */
+function cleanBinary(binary: Uint8Array, width: number, height: number) {
+  const total = width * height
+  const visited = new Uint8Array(total)
+  const stack = new Int32Array(total)
+  const minArea = Math.max(18, Math.round(total * 0.0008))
+
+  // Drop connected person blobs that are too small (segmentation speckles).
+  for (let seed = 0; seed < total; seed += 1) {
+    if (!binary[seed] || visited[seed]) continue
+    let top = 0
+    stack[top++] = seed
+    visited[seed] = 1
+    const members: number[] = []
+    while (top > 0) {
+      const index = stack[--top]
+      members.push(index)
+      const x = index % width
+      const y = (index - x) / width
+      if (x > 0 && binary[index - 1] && !visited[index - 1]) {
+        visited[index - 1] = 1
+        stack[top++] = index - 1
+      }
+      if (x < width - 1 && binary[index + 1] && !visited[index + 1]) {
+        visited[index + 1] = 1
+        stack[top++] = index + 1
+      }
+      if (y > 0 && binary[index - width] && !visited[index - width]) {
+        visited[index - width] = 1
+        stack[top++] = index - width
+      }
+      if (y < height - 1 && binary[index + width] && !visited[index + width]) {
+        visited[index + width] = 1
+        stack[top++] = index + width
+      }
+    }
+    if (members.length < minArea) {
+      for (const index of members) binary[index] = 0
+    }
+  }
+
+  // Fill enclosed holes: flood the background from the border, then any zero
+  // pixel the flood never reaches is an interior hole.
+  const reached = new Uint8Array(total)
+  let top = 0
+  for (let x = 0; x < width; x += 1) {
+    stack[top++] = x
+    stack[top++] = (height - 1) * width + x
+  }
+  for (let y = 0; y < height; y += 1) {
+    stack[top++] = y * width
+    stack[top++] = y * width + width - 1
+  }
+  while (top > 0) {
+    const index = stack[--top]
+    if (reached[index] || binary[index]) continue
+    reached[index] = 1
+    const x = index % width
+    const y = (index - x) / width
+    if (x > 0) stack[top++] = index - 1
+    if (x < width - 1) stack[top++] = index + 1
+    if (y > 0) stack[top++] = index - width
+    if (y < height - 1) stack[top++] = index + width
+  }
+  for (let i = 0; i < total; i += 1) {
+    if (!binary[i] && !reached[i]) binary[i] = 1
+  }
 }
 
 export function renderMask(
@@ -220,7 +292,15 @@ export function renderMask(
 
   const data = texture.imageData.data
   const edgeData = texture.edgeImageData.data
-  const feather = Math.max(0.002, options.feather)
+  const feather = Math.max(0.004, options.feather)
+
+  // Clean the hard silhouette first: this is what kills speckled "fuzzy"
+  // background and semi-transparent haze around the subject.
+  const binary = new Uint8Array(width * height)
+  for (let i = 0; i < values.length; i += 1) {
+    binary[i] = values[i] > options.threshold ? 1 : 0
+  }
+  cleanBinary(binary, width, height)
   const low = options.threshold - feather
   const high = options.threshold + feather
   const smoothing = Math.min(0.9, Math.max(0, options.smoothing ?? 0))
@@ -232,7 +312,9 @@ export function renderMask(
   const alpha = new Float32Array(values.length)
 
   for (let i = 0; i < values.length; i += 1) {
-    let a = smoothstep((values[i] - low) / (high - low || 0.0001))
+    let a = binary[i]
+      ? 0.55 + 0.45 * smoothstep((values[i] - low) / (high - low || 0.0001))
+      : 0
     if (options.invert) a = 1 - a
 
     if (previous) {

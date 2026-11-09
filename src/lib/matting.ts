@@ -126,8 +126,8 @@ export function drawPerson(
       pixels[offset] * 0.299 + pixels[offset + 1] * 0.587 + pixels[offset + 2] * 0.114
   }
 
-  const sigma = 24
-  const spatial = [-2, -1, 0, 1, 2]
+  const sigma = 16
+  const spatial = [-1, 0, 1]
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
       const index = y * w + x
@@ -156,7 +156,7 @@ export function drawPerson(
           const delta = luma[n] - centreLuma
           const colourWeight = Math.exp(-(delta * delta) / (2 * sigma * sigma))
           const dist = dx * dx + dy * dy
-          const spaceWeight = Math.exp(-dist / 8)
+          const spaceWeight = Math.exp(-dist / 4)
           const weight = colourWeight * spaceWeight
           weighted += (alpha[n * 4 + 3] / 255) * weight
           total += weight

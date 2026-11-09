@@ -123,7 +123,7 @@ function App() {
     () => typeof window === 'undefined' || window.innerWidth > 1180,
   )
   const [threshold, setThreshold] = useState(0.5)
-  const [feather, setFeather] = useState(0.09)
+  const [feather, setFeather] = useState(0.05)
   const [invert, setInvert] = useState(false)
   const [videoAiStatus, setVideoAiStatus] = useState<AiStatus>('idle')
   const [videoMeta, setVideoMeta] = useState<VideoMeta>({
