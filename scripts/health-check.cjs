@@ -19,6 +19,7 @@ const path = require('node:path')
 
 const PORT = 5173
 const URL = `http://127.0.0.1:${PORT}`
+const PUBLIC_URL = 'https://jeffrey-stein.github.io/bgr/'
 const PROJECT = path.join(__dirname, '..')
 const LOG = path.join(PROJECT, 'logs', 'health-check.log')
 
@@ -41,6 +42,23 @@ async function probe() {
   return { status: res.status }
 }
 
+async function checkPublic() {
+  try {
+    const res = await fetch(PUBLIC_URL, { signal: AbortSignal.timeout(15000) })
+    const html = await res.text()
+    const built = /assets\/index-.*\.js/.test(html)
+    if (res.status !== 200) {
+      log(`public site HTTP ${res.status} (${PUBLIC_URL})`, 'WARN')
+    } else if (!built) {
+      log(`public site is serving source instead of the built app — rerun the deploy workflow`, 'ERROR')
+    } else {
+      log(`public site healthy (${PUBLIC_URL})`)
+    }
+  } catch {
+    log(`public site unreachable (${PUBLIC_URL}) — check network or GitHub Pages status`, 'WARN')
+  }
+}
+
 async function main() {
   let recovered = false
 
@@ -55,6 +73,7 @@ async function main() {
 
   if (healthy) {
     log(`healthy (HTTP 200 on ${URL}, ${Date.now() - started}ms)`)
+    await checkPublic()
     process.exit(0)
   }
 
