@@ -17,6 +17,7 @@ import {
   fitRect,
   getPreviewSize,
 } from '../lib/utils'
+import { drawRefinedPerson } from '../lib/matting'
 import { canRecordCanvas } from '../lib/video'
 
 interface Settings {
@@ -125,6 +126,15 @@ function drawComposite(
         rect.height,
       )
       personContext.globalCompositeOperation = 'source-over'
+      // Rebuild edge colours so the old background does not bleed through
+      // hair and shoulders (alpha unmixing + green-spill suppression).
+      drawRefinedPerson(
+        personContext,
+        video,
+        mask,
+        settings.fit,
+        rect,
+      )
       context.drawImage(personCanvas, 0, 0)
       return
     }

@@ -39,11 +39,11 @@ export function TopBar({
         </button>
         <div className="brand">
           <div className="logo-mark" aria-hidden="true">
-            <span>C</span>
+            <span>B</span>
             <i />
           </div>
           <div className="brand-type">
-            <span className="brand-name">chroma</span>
+            <span className="brand-name">bignac</span>
             <span className="brand-sub">STUDIO</span>
           </div>
         </div>

@@ -163,7 +163,7 @@ export function CanvasFooter({
       <div className="timeline-side">
         <span className={`footer-pill ${videoCutout ? 'is-on' : ''}`}>
           {videoCutout ? <Sparkles size={12} /> : <Film size={12} />}
-          {videoCutout ? 'AI cutout' : 'Original'}
+          {videoCutout ? 'Cutout' : 'Original'}
         </span>
         <button
           type="button"

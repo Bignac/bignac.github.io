@@ -1,4 +1,4 @@
-# chroma-studio
+# bignac
 
 A browser-based media studio for real-time image/video cutout, greenscreen, and audio extraction. Everything runs locally — your media never leaves the machine.
 

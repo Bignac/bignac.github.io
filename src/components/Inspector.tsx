@@ -149,7 +149,7 @@ export function Inspector({
         </Section>
 
         <Section
-          title="AI Cutout"
+          title="Cutout"
           eyebrow="Foreground"
           icon={<WandSparkles size={16} />}
         >
@@ -164,7 +164,7 @@ export function Inspector({
                   <strong>Live cutout</strong>
                   <small>
                     {videoAiStatus === 'loading'
-                      ? 'Loading on-device AI…'
+                      ? 'Loading model…'
                       : videoCutout
                         ? 'Running in real time'
                         : 'Remove the person background'}
@@ -242,7 +242,6 @@ export function Inspector({
                   <Sparkles size={15} />
                 )}
                 {imageBusy ? 'Removing background…' : 'Remove background'}
-                {!imageBusy ? <span className="action-kbd">AI</span> : null}
               </button>
               {imageBusy ? (
                 <div className="cutout-progress compact-progress">

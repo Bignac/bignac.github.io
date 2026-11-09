@@ -24,7 +24,7 @@ const HEADERS: Record<ToolKey, { eyebrow: string; title: string; note: string }>
     note: 'Everything stays in this browser.',
   },
   cutout: {
-    eyebrow: 'AI tools',
+    eyebrow: 'Tools',
     title: 'Cutout studio',
     note: 'Remove backgrounds from images and video.',
   },

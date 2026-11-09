@@ -211,7 +211,7 @@ export function CutoutControls({
                   ? videoAiStatus === 'loading'
                     ? 'Warming up the on-device model…'
                     : videoAiStatus === 'error'
-                      ? 'The AI model could not start.'
+                      ? 'The model could not start.'
                       : 'Person cutout is running live.'
                   : 'Turn any video into a green screen clip.'}
               </span>
@@ -318,7 +318,6 @@ export function CutoutControls({
               <WandSparkles size={15} />
             )}
             {cutoutBusy ? 'Removing background…' : 'Remove background'}
-            {!cutoutBusy ? <span className="action-kbd">AI</span> : null}
           </button>
         )}
       </div>
@@ -341,7 +340,7 @@ export function CutoutControls({
           <div>
             <strong>Subject-aware cutout</strong>
             <span>
-              High-quality AI matting for people, products and objects. The model
+              High-quality matting for people, products and objects. The model
               downloads once, then runs locally.
             </span>
           </div>
@@ -648,7 +647,7 @@ export function QuickToolCards({
         <span className="quick-icon lime"><WandSparkles size={16} /></span>
         <span>
           <strong>Remove background</strong>
-          <small>{asset?.kind === 'video' ? 'Live AI cutout' : 'AI subject cutout'}</small>
+          <small>{asset?.kind === 'video' ? 'Live cutout' : 'Subject cutout'}</small>
         </span>
       </button>
       <button type="button" className="quick-tool" onClick={onBackdrop}>

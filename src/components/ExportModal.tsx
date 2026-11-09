@@ -68,7 +68,7 @@ export function ExportModal({
     () =>
       asset
         ? `${fileBaseName(asset.name)}-${suffix}`
-        : 'chroma-export',
+        : 'bignac-export',
     [asset, suffix],
   )
 

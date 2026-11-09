@@ -1,4 +1,5 @@
 import { removeBackground } from '@imgly/background-removal'
+import { decontaminateImageBlob } from './matting'
 
 export interface CutoutProgress {
   label: string
@@ -48,11 +49,15 @@ export async function removeImageBackgroundAI(
 
   if (supportsWebGpu) {
     try {
-      return await run('gpu')
+      const blob = await run('gpu')
+      onProgress({ label: 'Cleaning up edge colours', percent: 98 })
+      return await decontaminateImageBlob(blob)
     } catch {
       onProgress({ label: 'Switching to on-device CPU', percent: 18 })
     }
   }
 
-  return run('cpu')
+  const blob = await run('cpu')
+  onProgress({ label: 'Cleaning up edge colours', percent: 98 })
+  return decontaminateImageBlob(blob)
 }

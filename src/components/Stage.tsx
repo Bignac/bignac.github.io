@@ -185,7 +185,7 @@ export function Stage({
                   ? hasCutout
                     ? videoAiStatus === 'loading'
                       ? 'Preparing cutout'
-                      : 'AI cutout · live'
+                      : 'Cutout · live'
                     : 'Original video'
                   : hasCutout
                     ? 'Background removed'
@@ -207,13 +207,12 @@ export function Stage({
                   )}
                   {asset.kind === 'video'
                     ? quickCutoutBusy
-                      ? 'Loading AI cutout'
-                      : 'Turn on AI cutout'
+                      ? 'Loading cutout'
+                      : 'Turn on cutout'
                     : quickCutoutBusy
                       ? 'Removing background'
                       : 'Remove background'}
-                  <span className="quick-ai">AI</span>
-                </button>
+                                  </button>
               ) : null}
 
               {asset.kind === 'video' && !videoMeta.playing && !imageBusy ? (
