@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, LogOut, UserCircle } from 'lucide-react'
+import { ArrowUpRight, LogOut, UserCircle, Menu, X } from 'lucide-react'
 import type { User } from '../lib/auth'
 
 const SECTIONS = [
@@ -24,6 +24,7 @@ export function Landing({
   onSignOut: () => void
 }) {
   const [activeSection, setActiveSection] = useState('top')
+  const [sliderOpen, setSliderOpen] = useState(false)
   const [pick] = useState(() => {
     const options = [
       {
@@ -48,7 +49,7 @@ export function Landing({
           .sort((a, b) => b.boundingClientRect.y - a.boundingClientRect.y)[0]
         if (visible) setActiveSection(visible.target.id)
       },
-      { root: null, rootMargin: '-20% 0% -60% 0%', threshold: 0 },
+      { root: null, rootMargin: '-25% 0% -65% 0%', threshold: 0 },
     )
     SECTIONS.forEach((s) => {
       const el = document.getElementById(s.id)
@@ -60,6 +61,7 @@ export function Landing({
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    setSliderOpen(false)
   }
 
   const authButtons = user ? (
@@ -98,31 +100,35 @@ export function Landing({
       <img className="landing-bg" src={`${import.meta.env.BASE_URL}goat.png`} alt="" />
       <div className="landing-scrim" />
 
-      {/* ---------- slim left sidebar ---------- */}
-      <nav className="landing-sidebar">
-        <div className="sidebar-brand">
-          <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" width={20} height={20} />
-          <span>BIGNAC</span>
-        </div>
-        <div className="sidebar-nav">
+      {/* ---------- sleek right slider ---------- */}
+      <nav className={`landing-slider ${sliderOpen ? 'is-open' : ''}`}>
+        <button
+          type="button"
+          className="slider-handle"
+          onClick={() => setSliderOpen((open) => !open)}
+          aria-label={sliderOpen ? 'Close menu' : 'Open menu'}
+        >
+          {sliderOpen ? <X size={14} /> : <Menu size={14} />}
+        </button>
+        <div className="slider-nav">
           {SECTIONS.map((section) => (
             <button
               key={section.id}
               type="button"
-              className={`sidebar-item ${activeSection === section.id ? 'is-active' : ''}`}
+              className={`slider-item ${activeSection === section.id ? 'is-active' : ''}`}
               onClick={() => {
                 if (section.id === 'projects') onOpenProjects()
                 else scrollTo(section.id)
               }}
               aria-label={section.label}
             >
-              <span className="sidebar-dot" />
-              <span className="sidebar-label">{section.label}</span>
+              <span className="slider-dot" />
+              <span className="slider-label">{section.label}</span>
             </button>
           ))}
         </div>
-        <div className="sidebar-foot">
-          <span className="sidebar-version">v1.3.1</span>
+        <div className="slider-foot">
+          <span className="slider-version">v1.3.1</span>
         </div>
       </nav>
 
