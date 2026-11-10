@@ -13,6 +13,19 @@ export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [scrollNudge, setScrollNudge] = useState(false)
+  const [pick] = useState(() => {
+    const options = [
+      {
+        title: "raul is a femboy",
+        desc: "fem·boy /ˈfemˌbɔɪ/ noun: A person, typically male, who embraces traditionally feminine appearance, mannerisms, or clothing—often in a playful, soft, or androgynous way—common in internet and queer culture.",
+      },
+      {
+        title: "raul is a catboy",
+        desc: "cat·boy /ˈkatˌbɔɪ/ noun: A (usually male) character who displays feline traits—such as cat ears, a tail, and playful, aloof, or affectionate behavior—commonly featured in anime, manga, and internet culture.",
+      },
+    ];
+    return options[Math.floor(Math.random() * options.length)]
+  })
 
   useEffect(() => {
     const onScroll = () => {
@@ -63,15 +76,8 @@ export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
 
       <main className="landing-hero">
         <p className="landing-eyebrow">Background remover — photo &amp; video</p>
-        <h1>
-          Raul is a femboy/catboy — 50/50.
-          <br />
-          Cut it out.
-        </h1>
-        <p className="landing-copy">
-          Clean subjects from photos and video, straight in the browser.
-          Nothing is uploaded, nothing is stored.
-        </p>
+        <h1>{pick.title}</h1>
+        <p className="landing-copy">{pick.desc}</p>
         <div className="landing-actions">
           <button type="button" className="landing-cta" onClick={onOpenProjects}>
             Start a project
