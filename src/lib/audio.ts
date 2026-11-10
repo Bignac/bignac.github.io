@@ -77,7 +77,7 @@ function makeWaveform(buffer: AudioBuffer, bars = 64): number[] {
  * and room tone decay instead of hard-cutting (which causes clicks).
  */
 function applyNoiseGate(buffer: AudioBuffer, threshold: number): AudioBuffer {
-  const Ac = window.AudioContext || window.webkitAudioContext
+  const Ac = window.AudioContext || (window as any).webkitAudioContext
   if (!Ac) return buffer
   const tmp = new Ac({ sampleRate: buffer.sampleRate })
   try {
@@ -135,7 +135,7 @@ function isolateBackground(context: OfflineAudioContext, source: AudioBufferSour
   rumble.frequency.value = 80
 
   const voiceNotch = context.createBiquadFilter()
-  voiceNotch.type = 'notching'
+  voiceNotch.type = 'notch'
   voiceNotch.frequency.value = 1100
   voiceNotch.Q.value = 0.8
 
@@ -151,7 +151,7 @@ function isolateBackground(context: OfflineAudioContext, source: AudioBufferSour
 }
 
 async function runOffline(
-  context: AudioContext,
+  _context: AudioContext,
   buffer: AudioBuffer,
   chain: (ctx: OfflineAudioContext, src: AudioBufferSourceNode) => AudioNode,
 ): Promise<AudioBuffer> {
@@ -171,7 +171,7 @@ export async function extractAudio(
   file: File,
   mode: 'full' | 'voice' | 'background' = 'full',
 ): Promise<ExtractedAudio> {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
   if (!AudioContextClass) {
     throw new Error('Web Audio is not supported in this browser.')
   }
