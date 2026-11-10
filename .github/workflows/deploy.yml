@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.run_id }}
+  group: github-pages
   cancel-in-progress: true
 
 permissions:
