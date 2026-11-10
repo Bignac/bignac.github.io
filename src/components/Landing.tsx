@@ -129,7 +129,7 @@ export function Landing({
       <header className="landing-nav">
         <div className="landing-left">
           <a className="landing-brand" href="#top">
-            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" width={24} height={24} />
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" width={22} height={22} />
             <span>BIGNAC</span>
           </a>
         </div>

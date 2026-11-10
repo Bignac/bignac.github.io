@@ -486,7 +486,7 @@ html body{overflow:auto !important;-webkit-overflow-scrolling:touch}
 .landing-foot-link:hover{color:#fff}
 @media (max-width:640px){.landing-nav-links{display:none}.landing-menu-toggle{display:inline-flex}.landing-hero{padding-top:22vh}}
 
-.landing-nav{position:fixed;top:0;left:0;right:0;background:linear-gradient(180deg,rgba(8,8,8,.85),transparent);justify-content:space-between}
+.landing-nav{position:fixed;top:0;left:0;right:0;z-index:5;justify-content:space-between;padding:14px 26px;background:none;border:none}
 .landing-left{display:flex;align-items:center;gap:12px}
 .landing-drawer-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:5px;background:rgba(255,255,255,.06);border:0;color:#fff;cursor:pointer}
 .landing-drawer-toggle:hover{background:rgba(255,255,255,.14)}
