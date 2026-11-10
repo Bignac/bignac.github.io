@@ -4,12 +4,28 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="cat·boy /ˈkatˌbɔɪ/ noun: A (usually male) character who displays feline traits—such as cat ears, a tail, and playful, aloof, or affectionate behavior—commonly featured in anime, manga, and internet culture." />
     <title>Bignac Studio</title>
     <script>
       (function () {
-        const titles = ["raul is a femboy", "Raul is a catboy"];
-        document.title = titles[Math.floor(Math.random() * titles.length)];
+        const options = [
+          {
+            title: "raul is a femboy",
+            desc: "fem·boy /ˈfemˌbɔɪ/ noun: A person, typically male, who embraces traditionally feminine appearance, mannerisms, or clothing—often in a playful, soft, or androgynous way—common in internet and queer culture.",
+          },
+          {
+            title: "Raul is a catboy",
+            desc: "cat·boy /ˈkatˌbɔɪ/ noun: A (usually male) character who displays feline traits—such as cat ears, a tail, and playful, aloof, or affectionate behavior—commonly featured in anime, manga, and internet culture.",
+          },
+        ];
+        const pick = options[Math.floor(Math.random() * options.length)];
+        document.title = pick.title;
+        var meta = document.querySelector('meta[name="description"]');
+        if (!meta) {
+          meta = document.createElement("meta");
+          meta.name = "description";
+          document.head.appendChild(meta);
+        }
+        meta.content = pick.desc;
       })();
     </script>
   </head>
