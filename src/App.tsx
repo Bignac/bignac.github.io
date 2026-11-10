@@ -19,6 +19,8 @@ import type {
   VideoMeta,
 } from './types'
 import { Landing } from './components/Landing'
+import { ProjectsPage } from './components/ProjectsPage'
+import { AuthModal } from './components/AuthModal'
 import { TopBar } from './components/TopBar'
 import { Rail } from './components/Rail'
 import { LibraryPanel } from './components/LibraryPanel'
@@ -33,6 +35,13 @@ import { removeImageWithMediaPipe } from './lib/segmentation'
 import { extractAudio } from './lib/audio'
 import { composeImage } from './lib/compose'
 import { getPreferredVideoFormat } from './lib/video'
+import { getCurrentUser, signOut, type User } from './lib/auth'
+import {
+  createProject,
+  getProject,
+  touchProject,
+  type ProjectRecord,
+} from './lib/projects'
 import {
   captureVideoThumbnail,
   downloadBlob,
@@ -107,8 +116,12 @@ async function createAsset(file: File): Promise<MediaAsset> {
 }
 
 function App() {
-  const [view, setView] = useState<'home' | 'projects'>('home')
-  const [projectName, setProjectName] = useState('Untitled green screen')
+  const [view, setView] = useState<'home' | 'projects' | 'editor'>('home')
+  const [user, setUser] = useState<User | null>(() => getCurrentUser())
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | null>(null)
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null)
+
+  const [projectName, setProjectName] = useState('Untitled project')
   const [assets, setAssets] = useState<MediaAsset[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [ratio, setRatio] = useState<RatioKey>('16:9')
@@ -175,15 +188,50 @@ function App() {
     [],
   )
 
-  const patchAsset = useCallback(
-    (id: string, patch: Partial<MediaAsset>) => {
-      setAssets((current) =>
-        current.map((asset) =>
-          asset.id === id ? { ...asset, ...patch } : asset,
-        ),
-      )
+  const patchAsset = useCallback((id: string, patch: Partial<MediaAsset>) => {
+    setAssets((current) =>
+      current.map((asset) => (asset.id === id ? { ...asset, ...patch } : asset)),
+    )
+  }, [])
+
+  const resetEditor = useCallback(() => {
+    assetsRef.current.forEach((asset) => {
+      URL.revokeObjectURL(asset.url)
+      if (asset.cutoutUrl) URL.revokeObjectURL(asset.cutoutUrl)
+      if (asset.audio) URL.revokeObjectURL(asset.audio.url)
+    })
+    setAssets([])
+    setActiveId(null)
+    setRatio('16:9')
+    setFit('contain')
+    setBackground({ mode: 'color', color: '#00B140' })
+    setTool('media')
+    setThreshold(0.5)
+    setFeather(0.05)
+    setInvert(false)
+    setVideoAiStatus('idle')
+    setVideoMeta({ time: 0, duration: 0, playing: false })
+    setProcessing(null)
+  }, [])
+
+  const openEditor = useCallback(
+    (project?: ProjectRecord | null, opts?: { fresh?: boolean }) => {
+      resetEditor()
+      if (project) {
+        setCurrentProjectId(project.id)
+        setProjectName(project.name || 'Untitled project')
+        touchProject(project.id, {})
+      } else if (opts?.fresh && user) {
+        const p = createProject(user.id)
+        setCurrentProjectId(p.id)
+        setProjectName(p.name)
+      } else {
+        setCurrentProjectId(null)
+        setProjectName('Untitled project')
+      }
+      setView('editor')
     },
-    [],
+    [resetEditor, user],
   )
 
   useEffect(() => {
@@ -205,7 +253,7 @@ function App() {
 
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'e') {
         event.preventDefault()
-        setExportOpen(true)
+        if (view === 'editor') setExportOpen(true)
         return
       }
 
@@ -221,7 +269,7 @@ function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeAsset?.kind, exportOpen])
+  }, [activeAsset?.kind, exportOpen, view])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1180px)')
@@ -250,6 +298,12 @@ function App() {
       })
     }
   }, [])
+
+  useEffect(() => {
+    if (user && currentProjectId) {
+      touchProject(currentProjectId, { name: projectName })
+    }
+  }, [projectName, user, currentProjectId])
 
   const addFiles = async (fileList: FileList | File[]) => {
     if (uploading) return
@@ -282,6 +336,7 @@ function App() {
         'Ready for cutout and green screen.',
         'success',
       )
+      if (user && currentProjectId) touchProject(currentProjectId, {})
     }
 
     if (failed) {
@@ -488,8 +543,67 @@ function App() {
     setBackground(next)
   }
 
+  const handleSignOut = () => {
+    signOut()
+    setUser(null)
+    setView('home')
+  }
+
   if (view === 'home') {
-    return <Landing onOpenProjects={() => setView('projects')} />
+    return (
+      <>
+        <Landing
+          user={user}
+          onOpenProjects={() => setView('projects')}
+          onSignIn={() => setAuthMode('signin')}
+          onSignUp={() => setAuthMode('signup')}
+          onSignOut={handleSignOut}
+        />
+        {authMode ? (
+          <AuthModal
+            mode={authMode}
+            onClose={() => setAuthMode(null)}
+            onAuthed={(u) => {
+              setUser(u)
+              setAuthMode(null)
+              setView('projects')
+            }}
+          />
+        ) : null}
+      </>
+    )
+  }
+
+  if (view === 'projects') {
+    return (
+      <>
+        <ProjectsPage
+          user={user}
+          onHome={() => setView('home')}
+          onOpenProject={(p) => openEditor(p)}
+          onNewProject={(id) => {
+            if (id) {
+              const p = getProject(id)
+              openEditor(p)
+            } else {
+              openEditor(null)
+            }
+          }}
+          onSignIn={() => setAuthMode('signin')}
+          onSignOut={handleSignOut}
+        />
+        {authMode ? (
+          <AuthModal
+            mode={authMode}
+            onClose={() => setAuthMode(null)}
+            onAuthed={(u) => {
+              setUser(u)
+              setAuthMode(null)
+            }}
+          />
+        ) : null}
+      </>
+    )
   }
 
   return (
@@ -523,11 +637,14 @@ function App() {
         onProjectName={setProjectName}
         activeAsset={activeAsset}
         onHome={() => setView('home')}
+        onProjects={() => setView('projects')}
         onExport={() => setExportOpen(true)}
         onToggleLibrary={() => setLibraryOpen((current) => !current)}
         onToggleInspector={() => setInspectorOpen((current) => !current)}
         libraryOpen={libraryOpen}
         inspectorOpen={inspectorOpen}
+        user={user}
+        onSignIn={() => setAuthMode('signin')}
       />
 
       <div
@@ -661,6 +778,17 @@ function App() {
         onExportVideo={handleExportVideo}
         onDownloadAudio={() => handleDownloadAudio()}
       />
+
+      {authMode ? (
+        <AuthModal
+          mode={authMode}
+          onClose={() => setAuthMode(null)}
+          onAuthed={(u) => {
+            setUser(u)
+            setAuthMode(null)
+          }}
+        />
+      ) : null}
 
       <input
         ref={fileInputRef}

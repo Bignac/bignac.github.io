@@ -72,8 +72,106 @@ function makeWaveform(buffer: AudioBuffer, bars = 64): number[] {
   return peaks.map((peak) => Math.max(0.06, peak / maximum))
 }
 
-export async function extractAudio(file: File): Promise<ExtractedAudio> {
-  const AudioContextClass = window.AudioContext
+/**
+ * Soft noise gate: ramps gain down on quiet samples so background hiss
+ * and room tone decay instead of hard-cutting (which causes clicks).
+ */
+function applyNoiseGate(buffer: AudioBuffer, threshold: number): AudioBuffer {
+  const Ac = window.AudioContext || window.webkitAudioContext
+  if (!Ac) return buffer
+  const tmp = new Ac({ sampleRate: buffer.sampleRate })
+  try {
+    const out = tmp.createBuffer(
+      buffer.numberOfChannels,
+      buffer.length,
+      buffer.sampleRate,
+    )
+    for (let ch = 0; ch < buffer.numberOfChannels; ch += 1) {
+      const inData = buffer.getChannelData(ch)
+      const outData = out.getChannelData(ch)
+      let smoothGain = 1
+      for (let i = 0; i < inData.length; i += 1) {
+        const abs = Math.abs(inData[i])
+        const targetGain = abs > threshold ? 1 : Math.max(0, abs / threshold)
+        smoothGain += (targetGain - smoothGain) * 0.15
+        outData[i] = inData[i] * smoothGain
+      }
+    }
+    return out
+  } finally {
+    tmp.close().catch(() => undefined)
+  }
+}
+
+/**
+ * Voice isolation: bandpass around the vocal range (~300Hz–3kHz) with a
+ * presence boost, then a noise gate to suppress quiet background.
+ */
+function isolateVoice(context: OfflineAudioContext, source: AudioBufferSourceNode): AudioNode {
+  const bandpass = context.createBiquadFilter()
+  bandpass.type = 'bandpass'
+  bandpass.frequency.value = 900
+  bandpass.Q.value = 1.2
+
+  const presence = context.createBiquadFilter()
+  presence.type = 'peaking'
+  presence.frequency.value = 2600
+  presence.Q.value = 1
+  presence.gain.value = 6
+
+  source.connect(bandpass)
+  bandpass.connect(presence)
+  presence.connect(context.destination)
+  return presence
+}
+
+/**
+ * Background isolation: remove rumble, notch out the vocal band, and tame
+ * high-end hiss so what's left is mostly non-voice sound.
+ */
+function isolateBackground(context: OfflineAudioContext, source: AudioBufferSourceNode): AudioNode {
+  const rumble = context.createBiquadFilter()
+  rumble.type = 'highpass'
+  rumble.frequency.value = 80
+
+  const voiceNotch = context.createBiquadFilter()
+  voiceNotch.type = 'notching'
+  voiceNotch.frequency.value = 1100
+  voiceNotch.Q.value = 0.8
+
+  const hiss = context.createBiquadFilter()
+  hiss.type = 'lowpass'
+  hiss.frequency.value = 10000
+
+  source.connect(rumble)
+  rumble.connect(voiceNotch)
+  voiceNotch.connect(hiss)
+  hiss.connect(context.destination)
+  return hiss
+}
+
+async function runOffline(
+  context: AudioContext,
+  buffer: AudioBuffer,
+  chain: (ctx: OfflineAudioContext, src: AudioBufferSourceNode) => AudioNode,
+): Promise<AudioBuffer> {
+  const offline = new OfflineAudioContext(
+    buffer.numberOfChannels,
+    buffer.length,
+    buffer.sampleRate,
+  )
+  const source = offline.createBufferSource()
+  source.buffer = buffer
+  chain(offline, source)
+  source.start(0)
+  return offline.startRendering()
+}
+
+export async function extractAudio(
+  file: File,
+  mode: 'full' | 'voice' | 'background' = 'full',
+): Promise<ExtractedAudio> {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
   if (!AudioContextClass) {
     throw new Error('Web Audio is not supported in this browser.')
   }
@@ -94,13 +192,23 @@ export async function extractAudio(file: File): Promise<ExtractedAudio> {
       throw new Error('This video does not contain an audio track.')
     }
 
-    const blob = encodeWav(buffer)
+    let processed: AudioBuffer
+    if (mode === 'full') {
+      processed = buffer
+    } else if (mode === 'voice') {
+      processed = await runOffline(context, buffer, isolateVoice)
+      processed = applyNoiseGate(processed, 0.015)
+    } else {
+      processed = await runOffline(context, buffer, isolateBackground)
+    }
+
+    const blob = encodeWav(processed)
     return {
       blob,
       url: URL.createObjectURL(blob),
-      duration: buffer.duration,
-      waveform: makeWaveform(buffer),
-      sampleRate: buffer.sampleRate,
+      duration: processed.duration,
+      waveform: makeWaveform(processed),
+      sampleRate: processed.sampleRate,
     }
   } finally {
     await context.close().catch(() => undefined)
