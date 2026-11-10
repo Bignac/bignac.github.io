@@ -1,0 +1,5 @@
+[2026-11-09T20:21:23.352Z] INFO healthy (HTTP 200 on http://127.0.0.1:5173, 37ms)
+[2026-11-09T20:22:03.173Z] WARN server not responding on http://127.0.0.1:5173, attempting auto-fix
+[2026-11-09T20:22:09.741Z] INFO recovered: server back up (HTTP 200)
+[2026-11-09T21:01:12.527Z] INFO healthy (HTTP 200 on http://127.0.0.1:5173, 29ms)
+[2026-11-09T21:01:12.626Z] INFO public site healthy (https://jeffrey-stein.github.io/bgr/)
