@@ -522,17 +522,14 @@ html body{overflow:auto !important;-webkit-overflow-scrolling:touch}
 .landing-block p{font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.65)}
 .landing-nav-links{display:none!important}
 .landing-hero{max-width:720px;padding:26vh 26px 12vh 96px}
-.scroll-nudge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:8px;height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;animation:nudge 2s ease-in-out infinite}
-.scroll-nudge.visible{display:inline-flex}
+.scroll-nudge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;animation:nudge 2s ease-in-out infinite}
 .scroll-nudge svg{width:14px;height:14px}
 @keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
-.scroll-nudge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:8px;height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;animation:nudge 2s ease-in-out infinite}
-.scroll-nudge.visible{display:inline-flex}
+.scroll-nudge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;animation:nudge 2s ease-in-out infinite}
 .scroll-nudge svg{width:14px;height:14px}
 @keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
 
 html body{overflow:auto !important;-webkit-overflow-scrolling:touch}
-.scroll-nudge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:8px;height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;animation:nudge 2s ease-in-out infinite}
-.scroll-nudge.visible{display:inline-flex}
+.scroll-nudge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;animation:nudge 2s ease-in-out infinite}
 .scroll-nudge svg{width:14px;height:14px}
 @keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
