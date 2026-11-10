@@ -77,7 +77,8 @@ function makeWaveform(buffer: AudioBuffer, bars = 64): number[] {
  * and room tone decay instead of hard-cutting (which causes clicks).
  */
 function applyNoiseGate(buffer: AudioBuffer, threshold: number): AudioBuffer {
-  const Ac = window.AudioContext || (window as any).webkitAudioContext
+  const win = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }
+  const Ac = win.AudioContext || win.webkitAudioContext
   if (!Ac) return buffer
   const tmp = new Ac({ sampleRate: buffer.sampleRate })
   try {
@@ -135,7 +136,7 @@ function isolateBackground(context: OfflineAudioContext, source: AudioBufferSour
   rumble.frequency.value = 80
 
   const voiceNotch = context.createBiquadFilter()
-  voiceNotch.type = 'notch'
+  voiceNotch.type = 'notch' as BiquadFilterType
   voiceNotch.frequency.value = 1100
   voiceNotch.Q.value = 0.8
 
@@ -151,7 +152,6 @@ function isolateBackground(context: OfflineAudioContext, source: AudioBufferSour
 }
 
 async function runOffline(
-  _context: AudioContext,
   buffer: AudioBuffer,
   chain: (ctx: OfflineAudioContext, src: AudioBufferSourceNode) => AudioNode,
 ): Promise<AudioBuffer> {
@@ -171,7 +171,8 @@ export async function extractAudio(
   file: File,
   mode: 'full' | 'voice' | 'background' = 'full',
 ): Promise<ExtractedAudio> {
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+  const win = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }
+  const AudioContextClass = win.AudioContext || win.webkitAudioContext
   if (!AudioContextClass) {
     throw new Error('Web Audio is not supported in this browser.')
   }
@@ -196,10 +197,10 @@ export async function extractAudio(
     if (mode === 'full') {
       processed = buffer
     } else if (mode === 'voice') {
-      processed = await runOffline(context, buffer, isolateVoice)
+      processed = await runOffline(buffer, isolateVoice)
       processed = applyNoiseGate(processed, 0.015)
     } else {
-      processed = await runOffline(context, buffer, isolateBackground)
+      processed = await runOffline(buffer, isolateBackground)
     }
 
     const blob = encodeWav(processed)
