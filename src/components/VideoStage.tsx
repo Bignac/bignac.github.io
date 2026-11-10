@@ -323,7 +323,7 @@ export const VideoStage = forwardRef<VideoStageHandle, VideoStageProps>(
               feather: settingsRef.current.feather,
               invert: settingsRef.current.invert,
               smoothing: 0.5,
-            })
+            }, video)
             lastSegmentedTimeRef.current = video.currentTime
             needsRedrawRef.current = true
           })
@@ -595,7 +595,7 @@ export const VideoStage = forwardRef<VideoStageHandle, VideoStageProps>(
                     feather: settingsRef.current.feather,
                     invert: settingsRef.current.invert,
                     smoothing: 0.2,
-                  })
+                  }, video)
                 })
               }
               drawComposite(
