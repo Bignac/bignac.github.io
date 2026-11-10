@@ -79,7 +79,7 @@ export function Inspector({
   onToggleVideoCutout: (next: boolean) => void
   onRemoveImage: () => void
   onRestoreImage: () => void
-  onExtractAudio: () => void
+  onExtractAudio: (mode?: 'full' | 'voice' | 'background') => void
   onDownloadAudio: () => void
   onOpenExport: () => void
   onThreshold: (value: number) => void
@@ -320,7 +320,7 @@ export function Inspector({
                   <button
                     type="button"
                     className="text-button"
-                    onClick={onExtractAudio}
+                    onClick={() => onExtractAudio()}
                     disabled={audioBusy}
                   >
                     Re-extract
@@ -340,7 +340,7 @@ export function Inspector({
                   <button
                     type="button"
                     className="secondary-action compact"
-                    onClick={onExtractAudio}
+                    onClick={() => onExtractAudio()}
                     disabled={audioBusy}
                   >
                     {audioBusy ? (
