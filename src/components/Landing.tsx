@@ -139,15 +139,8 @@ export function Landing({
 
       <main className="landing-hero">
         <p className="landing-eyebrow">Background remover — photo &amp; video</p>
-        <h1>
-          {pick.title}.
-          <br />
-          Cut it out.
-        </h1>
-        <p className="landing-copy">
-          Clean subjects from photos and video, straight in the browser.
-          Nothing is uploaded, nothing is stored.
-        </p>
+        <h1>{pick.title}</h1>
+        <p className="landing-copy">{pick.desc}</p>
         <div className="landing-actions">
           <button type="button" className="landing-cta" onClick={onOpenProjects}>
             Start a project
@@ -226,7 +219,7 @@ export function Landing({
         <a className="landing-foot-link" href="https://bignac.github.io/">bignac.github.io</a>
       </footer>
       <button className="scroll-nudge" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         Scroll back up
       </button>
     </div>
