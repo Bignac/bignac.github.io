@@ -43,6 +43,12 @@ import {
   type ProjectRecord,
 } from './lib/projects'
 import {
+  dehydrateAssets,
+  hydrateAssets,
+  loadSnapshot,
+  saveSnapshot,
+} from './lib/projectStore'
+import {
   captureVideoThumbnail,
   downloadBlob,
   fileBaseName,
@@ -215,12 +221,29 @@ function App() {
   }, [])
 
   const openEditor = useCallback(
-    (project?: ProjectRecord | null, opts?: { fresh?: boolean }) => {
+    async (project?: ProjectRecord | null, opts?: { fresh?: boolean }) => {
       resetEditor()
       if (project) {
         setCurrentProjectId(project.id)
         setProjectName(project.name || 'Untitled project')
         touchProject(project.id, {})
+        try {
+          const snap = await loadSnapshot(project.id)
+          if (snap) {
+            const hydrated = await hydrateAssets(snap.assets || [])
+            setAssets(hydrated)
+            setActiveId(snap.activeId ?? hydrated[0]?.id ?? null)
+            if (snap.ratio) setRatio(snap.ratio)
+            if (snap.fit) setFit(snap.fit)
+            if (snap.background) setBackground(snap.background)
+            if (typeof snap.threshold === 'number') setThreshold(snap.threshold)
+            if (typeof snap.feather === 'number') setFeather(snap.feather)
+            if (typeof snap.invert === 'boolean') setInvert(snap.invert)
+            if (snap.name) setProjectName(snap.name)
+          }
+        } catch {
+          notify('Could not load project', 'Starting with a fresh canvas.', 'error')
+        }
       } else if (opts?.fresh && user) {
         const p = createProject(user.id)
         setCurrentProjectId(p.id)
@@ -231,7 +254,7 @@ function App() {
       }
       setView('editor')
     },
-    [resetEditor, user],
+    [resetEditor, user, notify],
   )
 
   useEffect(() => {
@@ -304,6 +327,39 @@ function App() {
       touchProject(currentProjectId, { name: projectName })
     }
   }, [projectName, user, currentProjectId])
+
+  useEffect(() => {
+    if (view !== 'editor' || !user || !currentProjectId) return
+    const t = window.setTimeout(() => {
+      void saveSnapshot({
+        projectId: currentProjectId,
+        name: projectName,
+        activeId,
+        ratio,
+        fit,
+        background,
+        threshold,
+        feather,
+        invert,
+        assets: dehydrateAssets(assets),
+        updatedAt: Date.now(),
+      }).catch(() => {})
+    }, 700)
+    return () => window.clearTimeout(t)
+  }, [
+    view,
+    user,
+    currentProjectId,
+    projectName,
+    activeId,
+    ratio,
+    fit,
+    background,
+    threshold,
+    feather,
+    invert,
+    assets,
+  ])
 
   const addFiles = async (fileList: FileList | File[]) => {
     if (uploading) return

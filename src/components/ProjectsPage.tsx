@@ -8,6 +8,7 @@ import {
   toggleFavorite,
   type ProjectRecord,
 } from '../lib/projects'
+import { deleteSnapshot } from '../lib/projectStore'
 
 function timeAgo(ts: number) {
   const diff = Date.now() - ts
@@ -133,7 +134,7 @@ export function ProjectsPage({
                       project={p}
                       onOpen={() => onOpenProject(p)}
                       onToggleFav={() => { toggleFavorite(p.id); refresh() }}
-                      onDelete={() => { deleteProject(p.id); refresh() }}
+                      onDelete={() => { void deleteSnapshot(p.id); deleteProject(p.id); refresh() }}
                     />
                   ))}
                 </ul>
@@ -159,7 +160,7 @@ export function ProjectsPage({
                       project={p}
                       onOpen={() => onOpenProject(p)}
                       onToggleFav={() => { toggleFavorite(p.id); refresh() }}
-                      onDelete={() => { deleteProject(p.id); refresh() }}
+                      onDelete={() => { void deleteSnapshot(p.id); deleteProject(p.id); refresh() }}
                     />
                   ))}
                 </ul>
