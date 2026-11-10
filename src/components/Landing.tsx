@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 
 const SECTIONS = [
-  { href: '#top', label: 'Top' },
-  { href: '#projects', label: 'Projects' },
-  { href: '#features', label: 'What it does' },
-  { href: '#faq', label: 'FAQ' },
-  { href: '#contact', label: 'Contact' },
+  { href: '/top', label: 'Top' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/features', label: 'What it does' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/contact', label: 'Contact' },
 ]
 
 export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
@@ -55,13 +55,13 @@ export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
           >
             {drawerOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
-          <a className="landing-brand" href="#top">
+          <a className="landing-brand" href="/top">
             <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" width={24} height={24} />
             <span>BIGNAC</span>
           </a>
         </div>
 
-        <a className="landing-signup" href="#contact">Sign up</a>
+        <a className="landing-signup" href="/contact">Sign up</a>
       </header>
 
       {drawerOpen ? (
@@ -83,7 +83,7 @@ export function Landing({ onOpenProjects }: { onOpenProjects: () => void }) {
             Start a project
             <ArrowUpRight size={16} />
           </button>
-          <a className="landing-ghost" href="#features">See what it does</a>
+          <a className="landing-ghost" href="/features">See what it does</a>
         </div>
       </main>
 
