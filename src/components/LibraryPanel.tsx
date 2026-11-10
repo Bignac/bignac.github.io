@@ -145,7 +145,7 @@ export function LibraryPanel({
               onBackdrop={() => onTool('backdrop')}
               onAudio={() => onTool('audio')}
             />
-            <PrivacyNote>No account, no cloud, no uploads. Just your browser.</PrivacyNote>
+            <PrivacyNote>No cloud, no uploads. Media stays in your browser; project history is saved locally for signed-in accounts.</PrivacyNote>
           </div>
         ) : null}
 

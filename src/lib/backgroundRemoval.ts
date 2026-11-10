@@ -36,9 +36,9 @@ export async function removeImageBackgroundAI(
 ): Promise<Blob> {
   const supportsWebGpu = 'gpu' in navigator
 
-  const run = (device: 'gpu' | 'cpu') =>
+  const run = (device: 'gpu' | 'cpu', model: 'isnet' | 'isnet_fp16' | 'isnet_quint8' = 'isnet') =>
     removeBackground(file, {
-      model: 'isnet_fp16',
+      model,
       device,
       proxyToWorker: true,
       output: { format: 'image/png', quality: 1 },
@@ -49,15 +49,29 @@ export async function removeImageBackgroundAI(
 
   if (supportsWebGpu) {
     try {
-      const blob = await run('gpu')
+      const blob = await run('gpu', 'isnet')
       onProgress({ label: 'Cleaning up edge colours', percent: 98 })
       return await decontaminateImageBlob(blob)
     } catch {
-      onProgress({ label: 'Switching to on-device CPU', percent: 18 })
+      onProgress({ label: 'Switching to a faster model', percent: 18 })
+      try {
+        const blob = await run('gpu', 'isnet_fp16')
+        onProgress({ label: 'Cleaning up edge colours', percent: 98 })
+        return await decontaminateImageBlob(blob)
+      } catch {
+        onProgress({ label: 'Switching to on-device CPU', percent: 18 })
+      }
     }
   }
 
-  const blob = await run('cpu')
+  try {
+    const blob = await run('cpu', 'isnet')
+    onProgress({ label: 'Cleaning up edge colours', percent: 98 })
+    return await decontaminateImageBlob(blob)
+  } catch {
+    onProgress({ label: 'Trying a lighter model', percent: 22 })
+  }
+  const blob = await run('cpu', 'isnet_fp16')
   onProgress({ label: 'Cleaning up edge colours', percent: 98 })
-  return decontaminateImageBlob(blob)
+  return await decontaminateImageBlob(blob)
 }

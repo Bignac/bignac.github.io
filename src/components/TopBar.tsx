@@ -1,32 +1,41 @@
 import {
   Download,
+  FolderOpen,
   House,
   LayoutPanelLeft,
   Settings2,
   ShieldCheck,
+  UserCircle,
 } from 'lucide-react'
 import type { MediaAsset } from '../types'
+import type { User } from '../lib/auth'
 
 export function TopBar({
   projectName,
   onProjectName,
   activeAsset,
   onHome,
+  onProjects,
   onExport,
   onToggleLibrary,
   onToggleInspector,
   libraryOpen,
   inspectorOpen,
+  user,
+  onSignIn,
 }: {
   projectName: string
   onProjectName: (name: string) => void
   activeAsset: MediaAsset | null
   onHome: () => void
+  onProjects: () => void
   onExport: () => void
   onToggleLibrary: () => void
   onToggleInspector: () => void
   libraryOpen: boolean
   inspectorOpen: boolean
+  user: User | null
+  onSignIn: () => void
 }) {
   return (
     <header className="topbar">
@@ -36,9 +45,18 @@ export function TopBar({
           className="icon-button"
           onClick={onHome}
           aria-label="Back to home"
-          title="Back to home"
+          title="Home"
         >
           <House size={17} />
+        </button>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={onProjects}
+          aria-label="Projects"
+          title="Projects"
+        >
+          <FolderOpen size={17} />
         </button>
         <button
           type="button"
@@ -69,7 +87,7 @@ export function TopBar({
           />
           <span className="project-status">
             <i />
-            Saved on this device
+            {user ? 'Saved on this device' : 'Not saved to account'}
           </span>
         </div>
       </div>
@@ -83,6 +101,13 @@ export function TopBar({
       </div>
 
       <div className="topbar-right">
+        {user ? (
+          <button type="button" className="file-pill user-pill" onClick={onProjects} title="My projects">
+            <UserCircle size={14} /> {user.name || 'Account'}
+          </button>
+        ) : (
+          <button type="button" className="secondary-action" onClick={onSignIn}>Sign in</button>
+        )}
         {activeAsset ? (
           <span className="file-pill">
             <i className={activeAsset.kind === 'video' ? 'is-video' : ''} />
